@@ -1241,7 +1241,7 @@ function openGalleryLightbox(imgSrc, label){
   overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.97);z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;padding:20px;box-sizing:border-box;';
   overlay.innerHTML = `
     <button onclick="document.getElementById('gallery-lightbox-overlay').remove()" style="position:absolute;top:16px;right:20px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.3);color:#fff;font-size:24px;cursor:pointer;z-index:10;width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:background 0.2s;">✕</button>
-    <img src="${imgSrc}" alt="${label}" style="width:auto;height:auto;max-width:min(90vw,1000px);max-height:78vh;object-fit:contain;border-radius:12px;box-shadow:0 8px 60px rgba(56,189,248,0.25);display:block;"/>
+    <img src="${imgSrc}" alt="${label}" style="width:min(90vw,1000px);max-height:80vh;object-fit:contain;border-radius:12px;box-shadow:0 8px 60px rgba(56,189,248,0.25);display:block;"/>
     <div style="font-family:'Cinzel',serif;font-size:13px;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,0.6);text-align:center;">${label}</div>
   `;
   overlay.addEventListener('click', e => { if(e.target === overlay) overlay.remove(); });
@@ -1773,27 +1773,27 @@ document.addEventListener("DOMContentLoaded", () => {
               }).join('');
             }
           }
-          // ── Gallery: posts with images → show as real photos ──
+          // ── Gallery: Firebase posts with images → update FIRST N slots (keep generated images for rest) ──
           const galleryPosts = posts.filter(p=>(p.img||p.poster)&&p.type!=='live').sort((a,b)=>(b.ts||0)-(a.ts||0)).slice(0,6);
           if(galleryPosts.length > 0){
             const grid = document.getElementById('gallery-dynamic-grid');
             const note = document.getElementById('gallery-note');
             if(grid){
               const labels={event:'EVENT',result:'CHAMPIONSHIP',notice:'NOTICE',general:'TRAINING'};
-              grid.innerHTML = galleryPosts.map((p,i)=>{ 
-                const imgSrc = p.poster||p.img;
-                const lbl = (p.text||'').replace(/<[^>]*>/g,'').substring(0,30).toUpperCase() || labels[p.type]||'ACADEMY';
-                const isFirst = i===0;
-                return `<div class="gallery-item${isFirst?' gallery-item-featured':''}" onclick="openGalleryLightbox('${imgSrc}','${lbl}')">
-                  <div class="gallery-thumb" style="min-height:${isFirst?'340px':'200px'};background:#060e1c;">
-                    <img src="${imgSrc}" alt="${lbl}" style="width:100%;height:100%;object-fit:cover;" loading="lazy"/>
-                  </div>
-                  <div class="gallery-overlay"></div>
-                  <div class="gallery-label">${lbl}</div>
-                  <div class="gallery-zoom">🔍</div>
-                </div>`;
-              }).join('');
-              if(note) note.textContent = `📸 ${galleryPosts.length} photos from latest events & training sessions`;
+              const staticItems = Array.from(grid.querySelectorAll('.gallery-item'));
+              // Update only first N slots with Firebase photos — remaining slots keep generated images
+              galleryPosts.forEach((p, i) => {
+                if(i < staticItems.length){
+                  const imgSrc = p.poster||p.img;
+                  const lbl = (p.text||'').replace(/<[^>]*>/g,'').substring(0,30).toUpperCase() || labels[p.type]||'ACADEMY';
+                  staticItems[i].onclick = () => openGalleryLightbox(imgSrc, lbl);
+                  const thumb = staticItems[i].querySelector('.gallery-thumb');
+                  if(thumb) thumb.innerHTML = `<img src="${imgSrc}" alt="${lbl}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform 0.6s ease;" loading="lazy"/>`;
+                  const labelEl = staticItems[i].querySelector('.gallery-label');
+                  if(labelEl) labelEl.textContent = lbl;
+                }
+              });
+              if(note) note.textContent = `📸 ${galleryPosts.length} real photo${galleryPosts.length>1?'s':''} synced from admin app`;
             }
           }
         }catch(e){}
