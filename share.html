@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Uyir Kalai — My Child's Achievement</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet"/>
+<style>
+:root{--red:#C0000A;--gold:#FFB300;--blue:#4db8ff;--green:#25D366;--dark:#010a12;--card:#011220;--border:#0a2a44;--text:#d0eeff;--muted:#336688;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--dark);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;padding:20px;}
+.wrap{max-width:480px;margin:0 auto;}
+.header{text-align:center;padding:28px 0 20px;position:relative;}
+.header h1{font-family:'Bebas Neue',sans-serif;font-size:clamp(28px,8vw,42px);letter-spacing:3px;color:var(--blue);}
+.header p{font-size:12px;color:var(--muted);letter-spacing:1px;margin-top:4px;}
+.badge{display:inline-flex;align-items:center;gap:6px;background:#C0000A;border-radius:4px;padding:4px 12px;font-size:10px;font-weight:700;letter-spacing:2px;margin-bottom:12px;}
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:16px;position:relative;overflow:hidden;}
+.card::before{content:'';position:absolute;top:0;left:0;width:100%;height:3px;background:linear-gradient(90deg,var(--blue),var(--green));}
+label{font-size:11px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:6px;}
+input,select{width:100%;padding:13px;background:#010d15;border:1.5px solid #0a2a44;border-radius:10px;color:var(--text);font-size:14px;font-family:inherit;outline:none;transition:border .2s;margin-bottom:14px;}
+input:focus,select:focus{border-color:var(--blue);}
+select option{background:#011220;}
+.btn{width:100%;padding:15px;border:none;border-radius:12px;font-weight:800;font-size:15px;cursor:pointer;transition:.2s;font-family:inherit;letter-spacing:1px;}
+.btn:active{transform:scale(0.98);}
+.btn-blue{background:linear-gradient(135deg,var(--blue),#00aaff);color:#010a12;}
+.btn-green{background:linear-gradient(135deg,var(--green),#1aa34a);color:#010a12;}
+.btn-outline{background:transparent;border:1.5px solid var(--border);color:var(--muted);margin-top:8px;}
+.tab-row{display:flex;gap:8px;margin-bottom:16px;}
+.tab{flex:1;padding:10px;border-radius:10px;border:1.5px solid var(--border);background:transparent;color:var(--muted);font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;transition:.2s;}
+.tab.active{border-color:var(--blue);background:#001a33;color:var(--blue);}
+.result-card{background:#010d15;border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:12px;display:flex;gap:14px;align-items:center;}
+.result-card img{width:56px;height:56px;border-radius:50%;object-fit:cover;border:2px solid var(--gold);flex-shrink:0;}
+.result-card .avatar{width:56px;height:56px;border-radius:50%;background:#0a2a44;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;}
+.result-info{flex:1;min-width:0;}
+.result-name{font-weight:700;font-size:14px;color:var(--text);}
+.result-sub{font-size:12px;color:var(--muted);margin-top:2px;}
+.result-badge{display:inline-block;margin-top:4px;padding:2px 10px;border-radius:20px;font-size:10px;font-weight:700;}
+.badge-gold{background:#2a1800;color:var(--gold);border:1px solid #4a3000;}
+.badge-blue{background:#001a33;color:var(--blue);border:1px solid #0a3a66;}
+.share-btn{padding:8px 14px;border-radius:20px;border:1px solid var(--green);background:#011a0d;color:var(--green);font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0;}
+.empty{text-align:center;padding:30px;color:var(--muted);font-size:14px;}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);padding:12px 24px;border-radius:30px;font-weight:600;font-size:13px;opacity:0;transition:opacity .3s;z-index:999;pointer-events:none;white-space:nowrap;background:#1a3a1a;color:var(--green);border:1px solid #2a5a2a;}
+#loader{display:none;text-align:center;padding:30px;color:var(--muted);}
+.spinner{width:32px;height:32px;border:3px solid #001a33;border-top-color:var(--blue);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.section-title{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:var(--gold);margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.section-title::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,#2a2a2a,transparent);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <div class="badge">🥋 UYIR KALAI ACADEMY</div>
+    <h1>MY CHILD'S<br/>ACHIEVEMENTS</h1>
+    <p>Parent Portal — View, Download & Share</p>
+  </div>
+
+  <!-- Search Card -->
+  <div class="card" id="searchCard">
+    <div class="tab-row">
+      <button class="tab active" onclick="setTab('phone',this)">📞 Phone Search</button>
+      <button class="tab" onclick="setTab('name',this)">👤 Name Search</button>
+    </div>
+
+    <div id="tab-phone">
+      <label>Parent / Student WhatsApp Number</label>
+      <input id="phoneInput" type="tel" placeholder="e.g. 9876543210" maxlength="10"/>
+    </div>
+    <div id="tab-name" style="display:none;">
+      <label>Student Name</label>
+      <input id="nameInput" type="text" placeholder="Enter student name"/>
+    </div>
+
+    <button class="btn btn-blue" onclick="searchStudent()">🔍 Find My Child</button>
+    <div id="loader"><div class="spinner"></div>Loading...</div>
+  </div>
+
+  <!-- Results -->
+  <div id="resultsArea" style="display:none;">
+
+    <!-- Student Info -->
+    <div id="studentInfo"></div>
+
+    <!-- Tabs -->
+    <div class="tab-row" id="resultTabs">
+      <button class="tab active" onclick="showSection('achievements',this)">🏆 Achievements</button>
+      <button class="tab" onclick="showSection('attendance',this)">✅ Attendance</button>
+      <button class="tab" onclick="showSection('fees',this)">💰 Fees</button>
+    </div>
+
+    <div id="achievementsSection">
+      <div class="section-title">🏆 Achievements</div>
+      <div id="achList"></div>
+    </div>
+    <div id="attendanceSection" style="display:none;">
+      <div class="section-title">✅ Attendance</div>
+      <div id="attInfo"></div>
+    </div>
+    <div id="feesSection" style="display:none;">
+      <div class="section-title">💰 Fee Status</div>
+      <div id="feeInfo"></div>
+    </div>
+
+  </div>
+
+</div>
+<div id="toast" class="toast"></div>
+
+<script type="module">
+import { initializeApp }   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey:"AIzaSyCRuQXdMhSyYS69uVaH8n3Kd4YACsbTP5A",
+  authDomain:"sp-uyirkalai.firebaseapp.com",
+  projectId:"sp-uyirkalai",
+  storageBucket:"sp-uyirkalai.firebasestorage.app",
+  messagingSenderId:"917896500550",
+  appId:"1:917896500550:web:99ad36246417ad32554147"
+};
+const app = initializeApp(firebaseConfig);
+const db  = getFirestore(app);
+
+let allStudents=[], allAch=[], allAtt={}, allFees={}, settings={}, branches=[];
+let currentStudent = null;
+let currentTab = 'phone';
+
+// Load all data once
+async function loadData(){
+  document.getElementById('loader').style.display='block';
+  try{
+    const snap = await getDoc(doc(db,'apps','uyir_kalai'));
+    if(!snap.exists()) throw new Error('No data');
+    const d = snap.data();
+    allStudents  = d.students    ? JSON.parse(d.students)    : [];
+    allAch       = d.achievements? JSON.parse(d.achievements): [];
+    allAtt       = d.attendance  ? JSON.parse(d.attendance)  : {};
+    allFees      = d.fees        ? JSON.parse(d.fees)        : {};
+    settings     = d.settings   ? JSON.parse(d.settings)    : {};
+    branches     = d.branches   ? JSON.parse(d.branches)    : [];
+  }catch(e){ toast('❌ Connection error. Refresh try பண்ணுங்க.'); }
+  document.getElementById('loader').style.display='none';
+}
+loadData();
+
+window.setTab = function(tab, btn){
+  currentTab = tab;
+  document.querySelectorAll('#searchCard .tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-phone').style.display = tab==='phone'?'block':'none';
+  document.getElementById('tab-name').style.display  = tab==='name'?'block':'none';
+};
+
+window.searchStudent = function(){
+  const phone = document.getElementById('phoneInput').value.trim();
+  const name  = document.getElementById('nameInput').value.trim().toLowerCase();
+  if(currentTab==='phone' && !phone){ toast('⚠️ Phone number kudhu!'); return; }
+  if(currentTab==='name'  && !name) { toast('⚠️ Name kudhu!'); return; }
+
+  let found;
+  if(currentTab==='phone'){
+    found = allStudents.find(s =>
+      s.parentPhone && s.parentPhone.replace(/\D/g,'').endsWith(phone.replace(/\D/g,''))
+    );
+  } else {
+    found = allStudents.find(s =>
+      s.name && s.name.toLowerCase().includes(name)
+    );
+  }
+
+  if(!found){ toast('⚠️ Student not found. Phone number check பண்ணுங்க.'); return; }
+
+  currentStudent = found;
+  showResults(found);
+};
+
+function showResults(s){
+  const br = branches.find(b=>String(b.id)===String(s.branch||s.branchId));
+  document.getElementById('studentInfo').innerHTML =
+    '<div class="card" style="margin-bottom:16px;">'
+    +'<div style="display:flex;gap:14px;align-items:center;">'
+    +(s.photo?`<img src="${s.photo}" style="width:70px;height:70px;border-radius:50%;object-fit:cover;border:3px solid #f0c040;flex-shrink:0;"/>`
+             :`<div style="width:70px;height:70px;border-radius:50%;background:#0a2a44;display:flex;align-items:center;justify-content:center;font-size:32px;flex-shrink:0;">👤</div>`)
+    +'<div style="flex:1;">'
+    +`<div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;color:#d0eeff;">${s.name}</div>`
+    +`<div style="font-size:13px;color:#4db8ff;">${s.game||''} · Level: ${s.level||'Beginner'}</div>`
+    +`<div style="font-size:12px;color:#336688;">${br?br.name:''} · Joined: ${s.joinDate||'-'}</div>`
+    +'</div></div></div>';
+
+  document.getElementById('resultsArea').style.display='block';
+  showSection('achievements', document.querySelector('#resultTabs .tab'));
+}
+
+window.showSection = function(sec, btn){
+  document.querySelectorAll('#resultTabs .tab').forEach(t=>t.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  document.getElementById('achievementsSection').style.display=sec==='achievements'?'block':'none';
+  document.getElementById('attendanceSection').style.display=sec==='attendance'?'block':'none';
+  document.getElementById('feesSection').style.display=sec==='fees'?'block':'none';
+
+  if(sec==='achievements') renderAch();
+  if(sec==='attendance')   renderAtt();
+  if(sec==='fees')         renderFees();
+};
+
+function renderAch(){
+  const s = currentStudent;
+  const studentAch = allAch.filter(a => String(a.studentId)===String(s.id) || a.studentName===s.name);
+  const el = document.getElementById('achList');
+  if(!studentAch.length){
+    el.innerHTML='<div class="empty">🏅 No achievements recorded yet.<br/>Keep training!</div>'; return;
+  }
+  el.innerHTML = studentAch.map((a,i)=>`
+    <div class="result-card">
+      ${a.photo?`<img src="${a.photo}" style="width:56px;height:56px;border-radius:8px;object-fit:cover;border:2px solid #f0c040;"/>`
+               :`<div class="avatar">🏆</div>`}
+      <div class="result-info">
+        <div class="result-name">${a.competition||a.title||'Achievement'}</div>
+        <div class="result-sub">${a.position||a.pos||''} · ${a.date?new Date(a.date).toLocaleDateString('en-IN',{month:'short',year:'numeric'}):''}</div>
+        ${a.cert?`<a href="${a.cert}" target="_blank" style="font-size:11px;color:#4db8ff;display:block;margin-top:4px;">📄 Certificate</a>`:''}
+      </div>
+      <button class="share-btn" onclick="shareAch(${i})">📤</button>
+    </div>
+  `).join('');
+
+  // Store for share
+  window._currentAch = studentAch;
+}
+
+window.shareAch = async function(idx){
+  const a = window._currentAch[idx];
+  const s = currentStudent;
+  await generateAndShareCard(s, a);
+};
+
+function renderAtt(){
+  const s = currentStudent;
+  const el = document.getElementById('attInfo');
+  // Calculate attendance from last 3 months
+  const now = new Date();
+  let totalP=0, totalA=0, rows=[];
+
+  for(let m=2; m>=0; m--){
+    const d = new Date(now.getFullYear(), now.getMonth()-m, 1);
+    const key = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+    const mLabel = d.toLocaleDateString('en-IN',{month:'long',year:'numeric'});
+    const daysInMonth = new Date(d.getFullYear(), d.getMonth()+1, 0).getDate();
+    let p=0, a=0;
+    for(let day=1; day<=daysInMonth; day++){
+      const dateKey = key+'-'+String(day).padStart(2,'0');
+      const val = allAtt[dateKey]?.[s.id];
+      if(val==='present'||val==='P') p++;
+      else if(val==='absent'||val==='A') a++;
+    }
+    if(p+a > 0){ totalP+=p; totalA+=a; rows.push({mLabel,p,a}); }
+  }
+
+  const pct = totalP+totalA > 0 ? Math.round((totalP/(totalP+totalA))*100) : 0;
+  const color = pct>=80?'#25D366':pct>=60?'#FFB300':'#F44336';
+
+  el.innerHTML =
+    `<div style="background:#010d15;border:1px solid #0a2a44;border-radius:12px;padding:16px;margin-bottom:12px;text-align:center;">
+      <div style="font-size:48px;font-family:'Bebas Neue',sans-serif;color:${color};">${pct}%</div>
+      <div style="font-size:13px;color:#336688;">Overall Attendance (Last 3 months)</div>
+      <div style="font-size:13px;color:#d0eeff;margin-top:6px;">✅ Present: ${totalP} &nbsp; ❌ Absent: ${totalA}</div>
+    </div>`
+    + rows.map(r=>`
+      <div class="result-card">
+        <div class="avatar" style="font-size:16px;width:44px;height:44px;">📅</div>
+        <div class="result-info">
+          <div class="result-name">${r.mLabel}</div>
+          <div class="result-sub">✅ ${r.p} Present · ❌ ${r.a} Absent</div>
+        </div>
+        <span class="result-badge ${r.p/(r.p+r.a||1)>=0.8?'badge-gold':'badge-blue'}">${Math.round(r.p/(r.p+r.a||1)*100)}%</span>
+      </div>`).join('');
+}
+
+function renderFees(){
+  const s = currentStudent;
+  const el = document.getElementById('feeInfo');
+  const now = new Date();
+  let rows=[];
+  for(let m=5; m>=0; m--){
+    const d = new Date(now.getFullYear(), now.getMonth()-m, 1);
+    const key = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+    const mLabel = d.toLocaleDateString('en-IN',{month:'long',year:'numeric'});
+    const fd = (allFees[key]||{})[s.id]||{status:'pending',amount:0};
+    rows.push({key,mLabel,fd});
+  }
+
+  const paidCount = rows.filter(r=>r.fd.status==='paid').length;
+
+  el.innerHTML =
+    `<div style="background:#010d15;border:1px solid #0a3a1a;border-radius:12px;padding:14px;margin-bottom:12px;text-align:center;">
+      <div style="font-size:13px;color:#25D366;margin-bottom:4px;">✅ Paid ${paidCount} / ${rows.length} Months</div>
+    </div>`
+    + rows.reverse().map((r,i)=>`
+      <div class="result-card">
+        <div class="avatar" style="font-size:16px;width:44px;height:44px;">${r.fd.status==='paid'?'✅':'⏳'}</div>
+        <div class="result-info">
+          <div class="result-name">${r.mLabel}</div>
+          <div class="result-sub">${r.fd.status==='paid'?'Paid — ₹'+(r.fd.amount||0).toLocaleString('en-IN'):'Pending'}</div>
+          ${r.fd.note?`<div style="font-size:10px;color:#336688;">${r.fd.note}</div>`:''}
+        </div>
+        ${r.fd.status==='paid'?`<button class="share-btn" onclick="shareFeeReceipt('${r.key}')">📄</button>`:''}
+      </div>`).join('');
+}
+
+window.shareFeeReceipt = async function(month) {
+  const s = currentStudent;
+  const fd = (allFees[month]||{})[s.id]||{amount:0};
+  const br = branches.find(b=>String(b.id)===String(s.branch||s.branchId));
+  const mStr = new Date(month+'-01').toLocaleDateString('en-IN',{month:'long',year:'numeric'});
+
+  const canvas = document.createElement('canvas');
+  canvas.width=800; canvas.height=520;
+  const ctx = canvas.getContext('2d');
+  const bg=ctx.createLinearGradient(0,0,800,520);
+  bg.addColorStop(0,'#010d15');bg.addColorStop(1,'#001a0d');
+  ctx.fillStyle=bg;ctx.fillRect(0,0,800,520);
+  ctx.strokeStyle='#25D366';ctx.lineWidth=6;ctx.strokeRect(8,8,784,504);
+  ctx.strokeStyle='#4db8ff';ctx.lineWidth=2;ctx.strokeRect(16,16,768,488);
+  // Header
+  ctx.fillStyle='#011a0d';ctx.fillRect(8,8,784,85);
+  if(s.photo){
+    try{await new Promise(res=>{const img=new Image();img.onload=()=>{ctx.save();ctx.beginPath();ctx.arc(65,50,35,0,Math.PI*2);ctx.clip();ctx.drawImage(img,30,15,70,70);ctx.restore();res();};img.onerror=()=>res();img.src=s.photo;img.crossOrigin='anonymous';});}catch(e){}
+  }
+  ctx.fillStyle='#25D366';ctx.font='bold 24px Arial';ctx.textAlign='center';
+  ctx.fillText((settings.name||'UYIR KALAI NATIONAL SPORTS ACADEMY').toUpperCase(),400,42);
+  ctx.fillStyle='#4db8ff';ctx.font='14px Arial';
+  ctx.fillText('OFFICIAL FEE RECEIPT',400,70);
+  const rows=[
+    ['Student Name',s.name],['Game / Sport',s.game||'-'],
+    ['Branch',br?br.name:'-'],['Fee Month',mStr],
+    ['Amount Paid','₹'+(fd.amount||0).toLocaleString('en-IN')],
+    ['Status','✅ PAID'],
+  ];
+  ctx.textAlign='left';
+  rows.forEach(([lbl,val],i)=>{
+    const y=140+i*52;
+    ctx.fillStyle=i%2===0?'#010d10':'#011215';ctx.fillRect(20,y-22,760,46);
+    ctx.fillStyle='#336688';ctx.font='13px Arial';ctx.fillText(lbl,40,y+5);
+    ctx.fillStyle=lbl==='Amount Paid'?'#25D366':lbl==='Status'?'#25D366':'#d0eeff';
+    ctx.font=lbl==='Amount Paid'?'bold 22px Arial':'bold 16px Arial';
+    ctx.fillText(val,300,y+6);
+  });
+  ctx.fillStyle='#011a0d';ctx.fillRect(8,456,784,56);
+  ctx.fillStyle='#4db8ff';ctx.font='bold 14px Arial';ctx.textAlign='center';
+  ctx.fillText('Thank you for your payment! 🙏',400,478);
+  ctx.fillStyle='#336688';ctx.font='12px Arial';
+  ctx.fillText((settings.ph?'📞 '+settings.ph:'📞 8220118489')+'  ·  uyirkalaisportsacademy.github.io',400,498);
+  const dataUrl=canvas.toDataURL('image/jpeg',0.93);
+  const modal=document.createElement('div');
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;';
+  const waMsg=encodeURIComponent('💰 Fee Receipt\n\n'+s.name+' — '+mStr+'\nAmount: ₹'+(fd.amount||0)+'\n✅ Paid\n\n'+(settings.name||'Uyir Kalai Academy')+'\n'+(settings.ph||'8220118489'));
+  modal.innerHTML=
+    '<div style="width:100%;max-width:480px;background:#011220;border:1px solid #25D366;border-radius:16px;overflow:hidden;max-height:95vh;display:flex;flex-direction:column;">'
+    +'<div style="padding:12px;background:#011a0d;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;">'
+    +'<div style="font-size:14px;font-weight:700;color:#25D366;">💰 Fee Receipt — '+mStr+'</div>'
+    +'<button onclick="this.closest(\'div[style*=fixed]\').remove()" style="background:none;border:none;color:#ff4444;font-size:22px;cursor:pointer;">✕</button>'
+    +'</div>'
+    +'<div style="overflow-y:auto;padding:12px;"><img src="'+dataUrl+'" style="width:100%;border-radius:8px;"/></div>'
+    +'<div style="padding:12px;background:#011a0d;display:flex;gap:8px;flex-shrink:0;">'
+    +'<a download="UK_Receipt_'+s.name+'_'+month+'.jpg" href="'+dataUrl+'" style="flex:1;text-decoration:none;">'
+    +'<button style="width:100%;padding:10px;background:#0a2a44;border:1px solid #4db8ff;border-radius:10px;color:#4db8ff;font-weight:700;font-size:13px;cursor:pointer;">⬇️ Download</button>'
+    +'</a>'
+    +'<a href="https://wa.me/?text='+waMsg+'" target="_blank" style="flex:1;text-decoration:none;">'
+    +'<button style="width:100%;padding:10px;background:#011a0d;border:1px solid #25D366;border-radius:10px;color:#25D366;font-weight:700;font-size:13px;cursor:pointer;">📲 WhatsApp</button>'
+    +'</a>'
+    +'</div></div>';
+  document.body.appendChild(modal);
+};
+
+async function generateAndShareCard(s, a){
+  const canvas=document.createElement('canvas');
+  canvas.width=800;canvas.height=500;
+  const ctx=canvas.getContext('2d');
+  const bg=ctx.createLinearGradient(0,0,800,500);
+  bg.addColorStop(0,'#010d15');bg.addColorStop(1,'#001a0a');
+  ctx.fillStyle=bg;ctx.fillRect(0,0,800,500);
+  ctx.strokeStyle='#f0c040';ctx.lineWidth=6;ctx.strokeRect(8,8,784,484);
+  ctx.strokeStyle='#4db8ff';ctx.lineWidth=2;ctx.strokeRect(16,16,768,468);
+  ctx.fillStyle='#001a33';ctx.fillRect(8,8,784,75);
+  ctx.fillStyle='#f0c040';ctx.font='bold 22px Arial';ctx.textAlign='center';
+  ctx.fillText((settings.name||'UYIR KALAI NATIONAL SPORTS ACADEMY').toUpperCase(),400,40);
+  ctx.fillStyle='#4db8ff';ctx.font='13px Arial';
+  ctx.fillText('ACHIEVEMENT RECOGNITION',400,65);
+  const photo=a.photo||s.photo||'';
+  if(photo){
+    try{await new Promise(res=>{const img=new Image();img.onload=()=>{ctx.save();ctx.beginPath();ctx.arc(110,260,88,0,Math.PI*2);ctx.clip();ctx.drawImage(img,22,172,176,176);ctx.restore();ctx.strokeStyle='#f0c040';ctx.lineWidth=5;ctx.beginPath();ctx.arc(110,260,88,0,Math.PI*2);ctx.stroke();res();};img.onerror=()=>res();img.src=photo;img.crossOrigin='anonymous';});}catch(e){}
+  }
+  ctx.textAlign='left';
+  ctx.fillStyle='#f0c040';ctx.font='bold 28px Arial';ctx.fillText(s.name,230,120);
+  ctx.fillStyle='#4db8ff';ctx.font='16px Arial';ctx.fillText(s.game||'',230,148);
+  ctx.fillStyle='#25D366';ctx.font='bold 22px Arial';ctx.fillText('🏆 '+(a.competition||a.title||''),230,196);
+  ctx.fillStyle='#fff';ctx.font='bold 18px Arial';ctx.fillText(a.position||a.pos||'',230,232);
+  if(a.date){const d=new Date(a.date).toLocaleDateString('en-IN',{month:'long',year:'numeric'});ctx.fillStyle='#888';ctx.font='14px Arial';ctx.fillText(d,230,262);}
+  if(a.cert){ctx.fillStyle='#4db8ff';ctx.font='13px Arial';ctx.fillText('📄 '+a.cert.slice(0,50),230,295);}
+  ctx.fillStyle='#011a0d';ctx.fillRect(8,440,784,52);
+  ctx.fillStyle='#4db8ff';ctx.font='13px Arial';ctx.textAlign='center';
+  ctx.fillText('📞 '+(settings.ph||'8220118489')+'  ·  uyirkalaisportsacademy.github.io',400,468);
+  const dataUrl=canvas.toDataURL('image/jpeg',0.93);
+  const modal=document.createElement('div');
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;';
+  const waMsg=encodeURIComponent('🏆 Congratulations '+s.name+'!\n'+(a.competition||a.title||'')+'\n'+(a.position||'')+'\n\n'+(settings.name||'Uyir Kalai Academy')+'\n'+(settings.ph||'8220118489'));
+  modal.innerHTML=
+    '<div style="width:100%;max-width:480px;background:#011220;border:1px solid #f0c040;border-radius:16px;overflow:hidden;max-height:95vh;display:flex;flex-direction:column;">'
+    +'<div style="padding:12px;background:#1a1400;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;">'
+    +'<div style="font-size:14px;font-weight:700;color:#f0c040;">🏆 '+s.name+' Achievement Card</div>'
+    +'<button onclick="this.closest(\'div[style*=fixed]\').remove()" style="background:none;border:none;color:#ff4444;font-size:22px;cursor:pointer;">✕</button>'
+    +'</div>'
+    +'<div style="overflow-y:auto;padding:12px;"><img src="'+dataUrl+'" style="width:100%;border-radius:8px;"/></div>'
+    +'<div style="padding:12px;background:#1a1400;display:flex;gap:8px;flex-shrink:0;">'
+    +'<a download="UK_Achievement_'+s.name+'.jpg" href="'+dataUrl+'" style="flex:1;text-decoration:none;">'
+    +'<button style="width:100%;padding:10px;background:#0a2a44;border:1px solid #4db8ff;border-radius:10px;color:#4db8ff;font-weight:700;font-size:13px;cursor:pointer;">⬇️ Download</button>'
+    +'</a>'
+    +'<a href="https://wa.me/?text='+waMsg+'" target="_blank" style="flex:1;text-decoration:none;">'
+    +'<button style="width:100%;padding:10px;background:#011a0d;border:1px solid #25D366;border-radius:10px;color:#25D366;font-weight:700;font-size:13px;cursor:pointer;">📲 WhatsApp</button>'
+    +'</a>'
+    +'</div></div>';
+  document.body.appendChild(modal);
+}
+
+function toast(m){
+  const t=document.getElementById('toast');
+  t.textContent=m;t.style.opacity=1;
+  setTimeout(()=>t.style.opacity=0,3200);
+}
+</script>
+</body>
+</html>

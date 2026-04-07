@@ -26,11 +26,13 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db  = getFirestore(app);
 
-// ✏️ Admin Password
+// ✏️ உன் app password இங்க போடு
 const ADMIN_PASS = "spuk@143";
 
 const BRANCHES = ["Minjur","Kanayambakam","Shetty Nagar","Chennai","Other"];
-const GAMES    = ["Silambam", "Kuttu Varisai", "Thang-Ta", "Adimurai", "Kalari", "Varmam", "Gatka", "Yoga", "Karate", "Kabaddi", "Skating", "Archery"];
+const GAMES    = ["Silambam","Adimurai","Thang-Ta","Kurash","Gatka",
+                  "Vietnam Vocotruyen","Kabaddi","Archery","Skating",
+                  "Self Defense","Kids Training"];
 
 const $  = id => document.getElementById(id);
 const showFlex = id => $(id).style.display = "flex";
