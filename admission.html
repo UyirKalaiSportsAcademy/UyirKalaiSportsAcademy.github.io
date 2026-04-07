@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Join Uyir Kalai — Admission Form</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet"/>
+
+<script type="module">
+import { initializeApp }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, doc,
+         updateDoc, deleteDoc, query, orderBy, serverTimestamp }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey:            "AIzaSyCRuQXdMhSyYS69uVaH8n3Kd4YACsbTP5A",
+  authDomain:        "sp-uyirkalai.firebaseapp.com",
+  projectId:         "sp-uyirkalai",
+  storageBucket:     "sp-uyirkalai.firebasestorage.app",
+  messagingSenderId: "917896500550",
+  appId:             "1:917896500550:web:99ad36246417ad32554147",
+  measurementId:     "G-4F7LY4E2KX"
+};
+
+const app = initializeApp(firebaseConfig);
+const db  = getFirestore(app);
+
+// ✏️ Admin Password
+const ADMIN_PASS = "spuk@143";
+
+const BRANCHES = ["Minjur","Kanayambakam","Shetty Nagar","Chennai","Other"];
+const GAMES    = ["Silambam", "Kuttu Varisai", "Thang-Ta", "Adimurai", "Kalari", "Varmam", "Gatka", "Yoga", "Karate", "Kabaddi", "Skating", "Archery"];
+
+const $  = id => document.getElementById(id);
+const showFlex = id => $(id).style.display = "flex";
+const hidEl    = id => $(id).style.display = "none";
+const showBlk  = id => $(id).style.display = "block";
+
+function toast(msg, ok=true){
+  const t = $("toast");
+  t.textContent = msg; t.className = "toast "+(ok?"ok":"err");
+  t.style.opacity = 1; setTimeout(()=> t.style.opacity=0, 3800);
+}
+
+function fillSelect(selId, arr){
+  const s = $(selId); if(!s) return;
+  arr.forEach(v => {
+    const o = document.createElement("option");
+    o.value = v; o.textContent = v; s.appendChild(o);
+  });
+}
+
+window.addEventListener("DOMContentLoaded", () => {
+  fillSelect("game",   GAMES);    fillSelect("editGame",   GAMES);
+  fillSelect("branch", BRANCHES); fillSelect("editBranch", BRANCHES);
+
+  const pass = new URLSearchParams(location.search).get("admin");
+  if(pass){
+    if(pass === ADMIN_PASS){
+      $("publicForm").style.display = "none";
+      showBlk("adminPanel");
+      $("heroSub").textContent = "Admin — Admission Requests";
+      loadAdminView();
+    } else {
+      toast("❌ Wrong admin password!", false);
+    }
+  }
+});
+
+// ── PUBLIC SUBMIT ──────────────────────────────────────
+window.submitForm = async function(){
+  const name   = $("name").value.trim();
+  const age    = $("age").value.trim();
+  const game   = $("game").value;
+  const branch = $("branch").value;
+  const phone  = $("phone").value.trim();
+
+  if(!name||!age||!game||!branch||!phone){
+    toast("⚠️ Name, Age, Game, Branch, Phone required!", false); return;
+  }
+  if(phone.length < 10){ toast("⚠️ Valid 10-digit phone kudhu!", false); return; }
+
+  const btn = $("submitBtn");
+  btn.textContent = "⏳ Submitting..."; btn.disabled = true;
+
+  try{
+    await addDoc(collection(db,"ukAdmissions"),{
+      name, age,
+      std:         $("std").value.trim(),
+      weight:      $("weight").value.trim(),
+      game, branch,
+      parentPhone: phone,
+      parentName:  $("parent").value.trim(),
+      status:      "pending",
+      joinDate:    new Date().toISOString().split("T")[0],
+      createdAt:   serverTimestamp()
+    });
+    ["name","age","std","weight","phone","parent"].forEach(f => $(f).value="");
+    $("game").selectedIndex=0; $("branch").selectedIndex=0;
+    showBlk("successMsg");
+    toast("✅ Application submitted!");
+  }catch(e){
+    toast("❌ Error: "+e.message, false);
+  }
+  btn.textContent="Submit Application →"; btn.disabled=false;
+};
+
+// ── ADMIN LOAD ─────────────────────────────────────────
+window.loadAdminView = async function(){
+  const tbody = $("admTable");
+  tbody.innerHTML = `<tr><td colspan="8" class="ltd">⏳ Loading...</td></tr>`;
+  try{
+    const snap = await getDocs(query(collection(db,"ukAdmissions"),orderBy("createdAt","desc")));
+    const docs = snap.docs;
+    $("cntTotal").textContent    = docs.length;
+    $("cntPending").textContent  = docs.filter(d=>d.data().status==="pending").length;
+    $("cntApproved").textContent = docs.filter(d=>d.data().status==="approved").length;
+
+    if(!docs.length){
+      tbody.innerHTML=`<tr><td colspan="8" class="ltd">No admissions yet.</td></tr>`; return;
+    }
+    tbody.innerHTML="";
+    docs.forEach(docSnap=>{
+      const d=docSnap.data(), id=docSnap.id;
+      const date=d.joinDate||"-";
+      const approveBtn = d.status!=="approved"
+        ? `<button class="btn-ap" onclick="approveStudent('${id}')">✅ → App</button>`
+        : `<span style="color:#4CAF50;font-size:11px">✅ Added</span>`;
+      const tr=document.createElement("tr");
+      tr.innerHTML=`
+        <td><b>${d.name}</b></td>
+        <td>${d.age}</td>
+        <td>${d.game}</td>
+        <td>${d.branch}</td>
+        <td><a href="https://wa.me/91${d.parentPhone}" target="_blank" style="color:#25D366">${d.parentPhone}</a></td>
+        <td><span class="chip ${d.status==="approved"?"ap":d.status==="rejected"?"rj":"pn"}">${d.status.toUpperCase()}</span></td>
+        <td>${date}</td>
+        <td><div class="act">
+          ${approveBtn}
+          <button class="btn-ed" onclick="openEdit('${id}','${d.name}','${d.age}','${d.game}','${d.branch}','${d.parentPhone}')">✏️</button>
+          <button class="btn-dl" onclick="deleteAdm('${id}')">🗑</button>
+        </div></td>`;
+      tbody.appendChild(tr);
+    });
+  }catch(e){
+    tbody.innerHTML=`<tr><td colspan="8" class="ltd" style="color:#F44336">Error: ${e.message}</td></tr>`;
+  }
+};
+
+// Approve → ukStudents (admin app reads this collection)
+window.approveStudent = async function(admId){
+  try{
+    const snap=await getDocs(collection(db,"ukAdmissions"));
+    let data; snap.forEach(d=>{ if(d.id===admId) data=d.data(); });
+    if(!data) return;
+
+    await addDoc(collection(db,"ukStudents"),{
+      name:data.name, age:data.age, std:data.std||"",
+      weight:data.weight||"", game:data.game, branch:data.branch,
+      parentPhone:data.parentPhone, level:"Beginner",
+      joinDate:data.joinDate, photo:"", video:"",
+      source:"online_admission", createdAt:serverTimestamp()
+    });
+    await updateDoc(doc(db,"ukAdmissions",admId),{status:"approved"});
+    toast("✅ Approved! Student added to Uyir Kalai app.");
+    loadAdminView();
+  }catch(e){ toast("❌ "+e.message,false); }
+};
+
+window.deleteAdm = async function(id){
+  if(!confirm("Delete this admission?")) return;
+  await deleteDoc(doc(db,"ukAdmissions",id));
+  toast("🗑 Deleted."); loadAdminView();
+};
+
+window.openEdit = function(id,name,age,game,branch,phone){
+  $("editId").value=$("editName").value=id;
+  $("editId").value=id; $("editName").value=name;
+  $("editAge").value=age; $("editPhone").value=phone;
+  setTimeout(()=>{ $("editGame").value=game; $("editBranch").value=branch; },30);
+  showFlex("editModal");
+};
+window.closeEdit = ()=> hidEl("editModal");
+window.saveEdit  = async function(){
+  const id=$("editId").value;
+  await updateDoc(doc(db,"ukAdmissions",id),{
+    name:$("editName").value, age:$("editAge").value,
+    game:$("editGame").value, branch:$("editBranch").value,
+    parentPhone:$("editPhone").value
+  });
+  hidEl("editModal"); toast("✅ Updated!"); loadAdminView();
+};
+</script>
+
+<style>
+:root{--red:#C0000A;--gold:#FFB300;--dark:#090909;--card:#111;--border:#1e1e1e;--text:#e8e8e8;--muted:#666;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--dark);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;}
+.hero{background:linear-gradient(160deg,#0d0000,#1a0000 60%,#0a0500);
+  padding:40px 20px 36px;text-align:center;position:relative;overflow:hidden;}
+.hero::before{content:'🥋';position:absolute;font-size:180px;opacity:.04;
+  top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;}
+.badge{display:inline-flex;align-items:center;gap:8px;background:var(--red);
+  border-radius:4px;padding:5px 16px;font-size:11px;font-weight:700;letter-spacing:2px;margin-bottom:16px;}
+.hero h1{font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(34px,10vw,60px);letter-spacing:3px;line-height:1;color:#fff;}
+.hero h1 span{color:var(--gold);}
+.hero p{color:#999;font-size:13px;margin-top:10px;}
+.hero-links{display:flex;justify-content:center;gap:12px;margin-top:18px;flex-wrap:wrap;}
+.hl{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;
+  border-radius:20px;font-size:13px;font-weight:600;text-decoration:none;
+  border:1.5px solid #333;color:#aaa;}
+.hl:hover{border-color:var(--gold);color:var(--gold);}
+.form-wrap{max-width:500px;margin:0 auto;padding:24px 16px 48px;}
+.fc{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:24px 20px;}
+.st{font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:2px;
+  color:var(--gold);margin:20px 0 12px;display:flex;align-items:center;gap:8px;}
+.st:first-child{margin-top:0;}
+label{font-size:12px;color:var(--muted);letter-spacing:.5px;display:block;margin-bottom:5px;}
+input,select{width:100%;padding:12px 14px;background:#0d0d0d;border:1.5px solid #252525;
+  border-radius:10px;color:var(--text);font-size:14px;font-family:inherit;
+  outline:none;transition:border .2s;margin-bottom:14px;}
+input:focus,select:focus{border-color:var(--red);}
+select option{background:#111;}
+.r2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.sbtn{width:100%;padding:16px;margin-top:4px;
+  background:linear-gradient(135deg,var(--red),#ff3300);
+  border:none;border-radius:12px;color:#fff;
+  font-weight:800;font-size:16px;letter-spacing:1px;cursor:pointer;transition:.2s;}
+.sbtn:hover{opacity:.88;transform:translateY(-1px);}
+.sbtn:disabled{opacity:.45;cursor:not-allowed;transform:none;}
+#successMsg{display:none;background:#0a2a0a;border:1px solid #1a5a1a;
+  border-radius:12px;padding:22px;text-align:center;margin-top:16px;}
+#successMsg h3{color:#4CAF50;font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;}
+#successMsg p{color:#aaa;font-size:13px;margin-top:8px;line-height:1.7;}
+.wa{display:inline-flex;align-items:center;gap:8px;margin-top:14px;
+  background:#25D366;border:none;border-radius:10px;
+  padding:11px 22px;color:#fff;font-weight:700;font-size:14px;cursor:pointer;text-decoration:none;}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+  padding:12px 24px;border-radius:30px;font-weight:600;font-size:13px;
+  opacity:0;transition:opacity .3s;z-index:999;pointer-events:none;white-space:nowrap;}
+.toast.ok{background:#1a3a1a;color:#4CAF50;border:1px solid #2a5a2a;}
+.toast.err{background:#3a0a0a;color:#F44336;border:1px solid #5a1a1a;}
+#adminPanel{display:none;padding:24px 14px 48px;max-width:960px;margin:0 auto;}
+.ahd{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:3px;
+  color:var(--gold);text-align:center;margin-bottom:16px;}
+.stats{display:flex;gap:10px;justify-content:center;margin-bottom:16px;flex-wrap:wrap;}
+.sc{background:var(--card);border:1px solid var(--border);border-radius:10px;
+  padding:12px 20px;text-align:center;min-width:80px;}
+.sc .sv{font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--gold);}
+.sc .sl{font-size:11px;color:var(--muted);letter-spacing:1px;}
+.rbtn{display:block;margin:0 auto 16px;padding:8px 20px;background:#1a1a1a;
+  border:1px solid #2a2a2a;border-radius:20px;color:#888;font-size:13px;cursor:pointer;}
+.rbtn:hover{color:var(--gold);}
+.tw{overflow-x:auto;border-radius:12px;border:1px solid var(--border);}
+table{width:100%;border-collapse:collapse;min-width:680px;}
+th{background:#161616;padding:11px 12px;font-size:10px;letter-spacing:1px;
+   text-transform:uppercase;color:var(--muted);text-align:left;}
+td{padding:10px 12px;font-size:13px;border-top:1px solid #181818;vertical-align:middle;}
+tr:hover td{background:#141414;}
+.ltd{text-align:center;color:#666;padding:24px!important;}
+.chip{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;}
+.pn{background:#2a1800;color:#FFB300;border:1px solid #4a3000;}
+.ap{background:#0a2a0a;color:#4CAF50;border:1px solid #1a4a1a;}
+.rj{background:#2a0a0a;color:#F44336;border:1px solid #4a1a1a;}
+.act{display:flex;gap:5px;flex-wrap:wrap;align-items:center;}
+.btn-ap{background:#0a2a0a;color:#4CAF50;border:1px solid #1a4a1a;
+  padding:5px 9px;border-radius:7px;font-size:11px;cursor:pointer;white-space:nowrap;}
+.btn-ed{background:#0a1a2a;color:#2196F3;border:1px solid #1a3a5a;
+  padding:5px 8px;border-radius:7px;font-size:12px;cursor:pointer;}
+.btn-dl{background:#2a0a0a;color:#F44336;border:1px solid #4a1a1a;
+  padding:5px 8px;border-radius:7px;font-size:12px;cursor:pointer;}
+#editModal{display:none;position:fixed;inset:0;background:#000c;
+  z-index:200;align-items:center;justify-content:center;}
+.ecard{background:#141414;border:1px solid #2a2a2a;border-radius:16px;
+  padding:24px;width:90%;max-width:380px;}
+.ecard h3{font-family:'Bebas Neue',sans-serif;letter-spacing:2px;color:var(--gold);margin-bottom:16px;}
+.ebtns{display:flex;gap:10px;margin-top:4px;}
+.save{flex:1;padding:12px;background:var(--red);border:none;border-radius:10px;color:#fff;font-weight:700;cursor:pointer;}
+.cancel{flex:1;padding:12px;background:#1a1a1a;border:1px solid #2a2a2a;border-radius:10px;color:#888;cursor:pointer;}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="badge">🥋 UYIR KALAI NATIONAL SPORTS ACADEMY</div>
+  <h1>JOIN THE <span>WARRIORS</span></h1>
+  <p id="heroSub">Free trial class · WhatsApp confirmation within 24 hours</p>
+  <div class="hero-links">
+    <a class="hl" href="https://uyirkalaisportsacademy.github.io">🏠 Website</a>
+    <a class="hl" href="https://wa.me/918220118489">📲 WhatsApp</a>
+  </div>
+</div>
+
+<!-- PUBLIC FORM -->
+<div id="publicForm" class="form-wrap">
+  <div class="fc">
+    <div class="st">👤 Student Details</div>
+    <label>Student Full Name *</label>
+    <input id="name" type="text" placeholder="Student பெயர் எழுதுங்க"/>
+    <div class="r2">
+      <div><label>Age *</label><input id="age" type="number" placeholder="வயது"/></div>
+      <div><label>School / Std</label><input id="std" type="text" placeholder="e.g. 7th Std"/></div>
+    </div>
+    <label>Weight (kg) — Optional</label>
+    <input id="weight" type="number" placeholder="e.g. 45"/>
+
+    <div class="st">🥋 Training Preference</div>
+    <label>Martial Art / Game *</label>
+    <select id="game"><option value="">-- Game Select பண்ணுங்க --</option></select>
+    <label>Preferred Branch *</label>
+    <select id="branch"><option value="">-- Branch Select பண்ணுங்க --</option></select>
+
+    <div class="st">📞 Parent Details</div>
+    <label>Parent / Guardian Name</label>
+    <input id="parent" type="text" placeholder="Parent பெயர்"/>
+    <label>WhatsApp Number *</label>
+    <input id="phone" type="tel" placeholder="10-digit number" maxlength="10"/>
+
+    <button class="sbtn" id="submitBtn" onclick="submitForm()">Submit Application →</button>
+
+    <div id="successMsg">
+      <h3>🎉 Application Received!</h3>
+      <p>உங்கள் application submit ஆச்சு!<br/>
+      Coach 24 hours-ல் WhatsApp பண்ணுவாங்க.<br/>
+      Free trial class arrange பண்றோம்! 🥋</p>
+      <a class="wa" href="https://wa.me/918220118489?text=Hi! I submitted my admission for Uyir Kalai Academy." target="_blank">
+        📲 WhatsApp Us Now
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- ADMIN -->
+<div id="adminPanel">
+  <div class="ahd">⚙️ Admission Requests</div>
+  <p style="text-align:center;color:#666;font-size:12px;margin-bottom:14px;">
+    ✅ Approve → Uyir Kalai App-ல் student auto add ஆவாங்க
+  </p>
+  <div class="stats">
+    <div class="sc"><div class="sv" id="cntTotal">-</div><div class="sl">Total</div></div>
+    <div class="sc"><div class="sv" id="cntPending" style="color:#FFB300">-</div><div class="sl">Pending</div></div>
+    <div class="sc"><div class="sv" id="cntApproved" style="color:#4CAF50">-</div><div class="sl">Approved</div></div>
+  </div>
+  <button class="rbtn" onclick="loadAdminView()">🔄 Refresh</button>
+  <div class="tw">
+    <table>
+      <thead><tr>
+        <th>Name</th><th>Age</th><th>Game</th><th>Branch</th>
+        <th>Phone</th><th>Status</th><th>Date</th><th>Actions</th>
+      </tr></thead>
+      <tbody id="admTable"><tr><td colspan="8" class="ltd">Loading...</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Edit Modal -->
+<div id="editModal">
+  <div class="ecard">
+    <h3>✏️ Edit Admission</h3>
+    <input type="hidden" id="editId"/>
+    <label>Name</label><input id="editName" type="text"/>
+    <label>Age</label><input id="editAge" type="number"/>
+    <label>Game</label><select id="editGame"><option value="">--</option></select>
+    <label>Branch</label><select id="editBranch"><option value="">--</option></select>
+    <label>Phone</label><input id="editPhone" type="tel"/>
+    <div class="ebtns">
+      <button class="save" onclick="saveEdit()">💾 Save</button>
+      <button class="cancel" onclick="closeEdit()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+</body>
+</html>
