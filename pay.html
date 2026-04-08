@@ -163,9 +163,25 @@ window.addEventListener('DOMContentLoaded', async () => {
     }
 
     if (!branches.length) {
-      showErr('No branches found. Admin app-ல் Branch add பண்ணி Cloud Sync பண்ணுங்க!');
-      $('loader').style.display = 'none';
-      return;
+      branches = [
+        {id:'br1', name:'Minjur'},
+        {id:'br2', name:'Kanayambakam'},
+        {id:'br3', name:'Shetty Nagar'},
+        {id:'br4', name:'Chennai'},
+      ];
+    }
+    if (!students.length) {
+      const sel = document.getElementById('student-sel');
+      sel.style.display = 'none';
+      const inp = document.createElement('input');
+      inp.type='text'; inp.id='student-name-input';
+      inp.placeholder='Student பெயர் type பண்ணுங்க';
+      inp.style.cssText='width:100%;padding:14px;background:#010d15;border:1px solid #0a2a44;border-radius:12px;color:#d0eeff;font-size:15px;margin-bottom:20px;outline:none;font-family:inherit;';
+      inp.oninput=function(){
+        currentStudent={id:Date.now(),name:this.value,game:'-',branch:document.getElementById('branch-sel').value,parentPhone:''};
+        updateSummary();
+      };
+      sel.parentNode.insertBefore(inp, sel);
     }
 
     populateBranches();
